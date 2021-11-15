@@ -12,6 +12,8 @@ function resizeRendererToDisplaySize(renderer) {
     return needResize;
   }
 
+  const renderWith = 512;
+  const renderHeight = 512;
 
 function main() {
     const canvas = document.getElementById("c");
@@ -22,13 +24,19 @@ function main() {
     const camera = new THREE.PerspectiveCamera(75, w / h, 1, 1000);
     camera.position.z = 5;
 
-    const scene = new THREE.Scene();
+    const rtcamera = new THREE.PerspectiveCamera(75, w / h, 1, 1000);
+    rtcamera.position.z = 2;
 
+    const renderTarget = new THREE.WebGLRenderTarget(renderWith, renderHeight);
+
+    const rtScene = new THREE.Scene();
+    rtScene.background = new THREE.Color("red");
+    const scene = new THREE.Scene();
     function makeInstance(geo, color, x) {
         const material = new THREE.MeshPhongMaterial({color});// #44aa88
         const cube = new THREE.Mesh(geo, material);
         cube.position.x = x;
-        scene.add(cube);
+        rtScene.add(cube);
         return cube;
     }
 
@@ -37,7 +45,8 @@ function main() {
          const intensity = 1;
          const light = new THREE.DirectionalLight(color, intensity);
          light.position.set(-1, 2, 4);
-         scene.add(light);
+         rtScene.add(light);
+        //  scene.add(light);
     }
 
     const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -46,7 +55,33 @@ function main() {
         makeInstance(boxGeometry, 0x44aa88,  0),
         makeInstance(boxGeometry, 0x8844aa, -2),
         makeInstance(boxGeometry, 0xaa8844,  2),
-    ]
+    ];
+
+    
+
+    {
+        const color = 0xFFFFFF;
+        const intensity = 1;
+        const light = new THREE.DirectionalLight(color, intensity);
+        light.position.set(-1, 2, 4);
+        scene.add(light);
+    }
+
+    // {
+        // create render buffer;
+
+        const cubeMat = new THREE.MeshPhongMaterial({
+            map: renderTarget.texture 
+        });
+
+       
+
+    // }
+
+    const cube = new THREE.Mesh(boxGeometry, cubeMat);
+
+    scene.add(cube);
+
     var tick = function(time) {
         let t = time * 0.001;
         if (resizeRendererToDisplaySize(renderer)) {
@@ -59,7 +94,14 @@ function main() {
             cube.rotation.x = t;
             cube.rotation.y = t;
         });
-        renderer.render(scene, camera);
+
+        renderer.setRenderTarget(renderTarget);
+        renderer.render(rtScene, camera);
+        renderer.setRenderTarget(null);
+
+        cube.rotation.x = time * 0.001;
+        cube.rotation.y = time * 0.001;
+        renderer.render(scene, rtcamera);
         window.requestAnimationFrame(tick);
     }
 
