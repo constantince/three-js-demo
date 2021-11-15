@@ -84,6 +84,9 @@ function main() {
         // light.target.position.set(-5, 0, 0);
         scene.add(light);
         // scene.add(light.target);
+
+        const helper = new THREE.PointLightHelper(light);
+        scene.add(helper);
     }
    
 
