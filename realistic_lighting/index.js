@@ -1,8 +1,7 @@
 import * as THREE from "../core/three.module.js";
 import { OrbitControls } from "../core/OrbitControls.js";
 import { GLTFLoader } from "../core/GLTFLoader.js";
-let scene, camera, orbit, renderer, hemiLight,
-light;
+let scene, camera, orbit, renderer, hemiLight, light;
 function main() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerWidth, 1, 1000);
@@ -21,7 +20,7 @@ function main() {
     orbit.target.set(0, 0, 0);
     // orbit.update();
 
-    hemiLight = new THREE.HemisphereLight(0xffeeb1, 0x080820, 4);
+    hemiLight = new THREE.DirectionalLight(0xffffff, 100);
     scene.add(hemiLight);
 
     // light = new THREE.SpotLight(0xffa95c, 4);
