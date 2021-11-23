@@ -99,7 +99,7 @@ function tick(time) {
     stats.begin()
     cube.rotation.y = time * c.rotationSpeed;
     sphere.position.y = Math.abs(Math.sin(time * c.bouncingSpeed)) + 0.5;
-    sphere.position.z = Math.cos(time * c.bouncingSpeed) - 4;
+    sphere.position.z = Math.cos(time * c.bouncingSpeed) - 5;
     renderer.render(scene, camera);
     stats.end();
     window.requestAnimationFrame(tick);
