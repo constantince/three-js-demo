@@ -25,8 +25,9 @@ function main() {
         const Geo = new THREE.BufferGeometry();
         const Mat = new THREE.PointsMaterial({
             size: 2,
-            // transparent: true,
+            transparent: true,
             map: tex,
+            opacity: .7
             // blending: THREE.AdditiveBlending
         });
 
