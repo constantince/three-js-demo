@@ -63,6 +63,7 @@ function main() {
     renderer = new THREE.WebGLRenderer({antialis: true});
     renderer.setSize(w, h);
     renderer.setClearColor(0xEEEEEE);
+    renderer.shadowMap.enabled = true;
     canvas = renderer.domElement;
 
     controls = new OrbitControls(camera, canvas);
@@ -70,11 +71,30 @@ function main() {
     scene.add(new THREE.AxesHelper(500));
 
     document.body.appendChild(canvas);
+    const size = 100;
+    const envBox = new THREE.BoxBufferGeometry(size, size, size);
+    const envMat = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide
+    });
+    const env = new THREE.Mesh(envBox, envMat);
+    env.receiveShadow = true;
+    scene.add(env);
+
+    const light = new THREE.PointLight(0xffffff);
+    light.position.set(10, 0, 0);
+    light.castShadow = true;
+    scene.add(light);
+
+    scene.add(new THREE.PointLightHelper(light))
+
+    const ambien = new THREE.AmbientLight(0xffffff);
+    // scene.add(ambien);
 
     const baseGeometry = new THREE.SphereBufferGeometry(1, 8, 8);
 
     const instancedGeometry = new THREE.InstancedBufferGeometry().copy(baseGeometry);
-    const instanceCount = 10000;
+    const instanceCount = 10;
     instancedGeometry.instanceCount = instanceCount;
 
     const material = new THREE.ShaderMaterial({
@@ -113,6 +133,8 @@ function main() {
     );
 
     mesh = new THREE.Mesh(instancedGeometry, material);
+    mesh.castShadow = true;
+
 
    
 
