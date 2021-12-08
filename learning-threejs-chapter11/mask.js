@@ -5,9 +5,11 @@ import { ClearMaskPass, MaskPass } from "../three/examples/jsm/postprocessing/Ma
 import { RenderPass } from "../three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "../three/examples/jsm/postprocessing/ShaderPass.js";
 import { CopyShader } from "../three/examples/jsm/shaders/CopyShader.js";
+import { SepiaShader } from "../three/examples/jsm/shaders/SepiaShader.js";
+import { ColorifyShader } from "../three/examples/jsm/shaders/ColorifyShader.js";
 // import { s } from "../three/examples/jsm/postprocessing/C";
 let sceneEarth, sceneMars, sceneBg, cameraBg, camera, controls, renderer, canvas, stats, composer, clock;
-
+let earth, mars;
 clock = new THREE.Clock();
 
 function main() {
@@ -32,24 +34,26 @@ function main() {
     const bgGeo = new THREE.PlaneBufferGeometry(1, 1);
     const bgMat = new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
+        depthTest: false,
         map: loader.load("../images/starry-deep-outer-space-galaxy.jpg")
     });
     const bg = new THREE.Mesh(bgGeo, bgMat);
-    sceneBg.add(new THREE.AxesHelper());
+    // sceneBg.add(new THREE.AxesHelper());
     bg.position.z = -100;
     bg.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
     sceneBg.add(bg);
 
     const earthGeo = new THREE.SphereBufferGeometry(4, 100, 100);
     const earthMat = new THREE.MeshPhongMaterial({
-        map: loader.load("../images/planets/Earth.png")
+        map: loader.load("../images/planets/Earth.png"),
+        normalMap: loader.load("../images/planets/EarthNormal.png")
     });
-    const earth = new THREE.Mesh(earthGeo, earthMat);
+    earth = new THREE.Mesh(earthGeo, earthMat);
     earth.position.z = 10;
 
     const lightInEarth = new THREE.DirectionalLight(0xffffff, 1.2);
     lightInEarth.position.set(500, 500, 500);
-    sceneEarth.add(new THREE.AxesHelper(500));
+    // sceneEarth.add(new THREE.AxesHelper(500));
     sceneEarth.add(lightInEarth);
     sceneEarth.add(earth);
 
@@ -63,7 +67,7 @@ function main() {
     lightInMars.position.set(500, 500, 500);
     sceneMars.add(lightInMars);
 
-    const mars = new THREE.Mesh(marsGeo, marsMat);
+    mars = new THREE.Mesh(marsGeo, marsMat);
     mars.position.z = -10;
     sceneMars.add(mars);
 
@@ -78,6 +82,7 @@ function main() {
 
     const bgPass = new RenderPass(sceneBg, cameraBg);
     
+    
     const renderPass = new RenderPass(sceneEarth, camera);
     renderPass.clear = false;
 
@@ -85,15 +90,20 @@ function main() {
     renderPass2.clear = false;
 
     var effectCopy = new ShaderPass(CopyShader);
-    effectCopy.renderToScreen = true;
+    effectCopy.renderToScreen = false;
+
+    
 
     const marsMask = new MaskPass(sceneMars, camera);
     const clearMask = new ClearMaskPass();
 
     const earthMask = new MaskPass(sceneEarth, camera);
 
-    // const effectColorify = new ShaderPass(ColorifyShader);
-    // effectColorify.uniforms['color'].value.setRGB(.5, .5, 1);
+    const effectSepia = new ShaderPass(SepiaShader);
+    effectSepia.uniforms['amount'].value = 0.8;
+
+    const brighness = new ShaderPass(ColorifyShader);
+    brighness.uniforms['color'].value.setRGB(0.5, 0.5, 1);
 
     composer = new EffectComposer(renderer);
     composer.renderTarget1.stencilBuffer = true;
@@ -103,17 +113,15 @@ function main() {
     composer.addPass(renderPass);
     composer.addPass(renderPass2);
     // composer.addPass(clearMask);
-    // composer.addPass(marsMask);
-    // composer.addPass(clearMask);
-    // composer.addPass(earthMask);
-    // composer.addPass(effectCopy);
-    // composer.addPass(effectColorify);
-    
+    composer.addPass(marsMask);
+    composer.addPass(effectSepia);
+    composer.addPass(clearMask);
 
-    // composer.addPass(earthMask);
-    // composer.addPass(effectSepia);
-    // 
+    composer.addPass(earthMask);
+    composer.addPass(brighness);
+    composer.addPass(clearMask);
 
+    composer.addPass(effectCopy);
 
     controls = new OrbitControls(camera, canvas);
 
@@ -125,6 +133,8 @@ main();
 
 function tick() {
     renderer.autoClear = false;
+    mars.rotation.y += 0.002;
+    earth.rotation.y += 0.002;
     const delta = clock.getDelta();
     composer.render(delta);
     window.requestAnimationFrame(tick);
