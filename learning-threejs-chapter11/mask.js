@@ -71,7 +71,7 @@ function main() {
     mars.position.z = -10;
     sceneMars.add(mars);
 
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({antialis: true});
     renderer.setSize(w, h);
     renderer.setClearColor(0x000000);
     canvas = renderer.domElement;
@@ -92,7 +92,22 @@ function main() {
     var effectCopy = new ShaderPass(CopyShader);
     effectCopy.renderToScreen = false;
 
-    
+    const cubeScene = new THREE.Scene();
+    cubeScene.add(camera);
+
+    const size = 3;
+    const cubeGeo = new THREE.BoxBufferGeometry(size, size, size);
+    const cubeMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff
+    });
+    const cube = new THREE.Mesh(cubeGeo, cubeMat);
+    cube.position.x = 10;
+    cube.position.z = -5;
+
+    cubeScene.add(cube);
+
+    const renderPass3 = new RenderPass(cubeScene, camera);
+    renderPass3.clear = false;
 
     const marsMask = new MaskPass(sceneMars, camera);
     const clearMask = new ClearMaskPass();
@@ -105,6 +120,25 @@ function main() {
     const brighness = new ShaderPass(ColorifyShader);
     brighness.uniforms['color'].value.setRGB(0.5, 0.5, 1);
 
+    const cubeMask = new MaskPass(cubeScene, camera);
+    const myShader = new ShaderPass({
+        uniforms: [
+
+        ],
+        vertexShader: `
+            void main() {
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            void main() {
+
+                gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+            }
+        `
+    });
+
+
     composer = new EffectComposer(renderer);
     composer.renderTarget1.stencilBuffer = true;
     composer.renderTarget2.stencilBuffer = true;
@@ -112,6 +146,7 @@ function main() {
     composer.addPass(bgPass);
     composer.addPass(renderPass);
     composer.addPass(renderPass2);
+    composer.addPass(renderPass3);
     // composer.addPass(clearMask);
     composer.addPass(marsMask);
     composer.addPass(effectSepia);
@@ -119,6 +154,10 @@ function main() {
 
     composer.addPass(earthMask);
     composer.addPass(brighness);
+    composer.addPass(clearMask);
+
+    composer.addPass(cubeMask);
+    composer.addPass(myShader);
     composer.addPass(clearMask);
 
     composer.addPass(effectCopy);
