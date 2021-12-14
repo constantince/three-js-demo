@@ -8,7 +8,9 @@ import { CopyShader } from "../three/examples/jsm/shaders/CopyShader.js";
 import { GUI } from "../core/Dat.gui.js";
 import { ClearMaskPass, MaskPass } from "../three/examples/jsm/postprocessing/MaskPass.js";
 let scene, camera, renderer, canvas, controls, stats, bloomComposer, lamp, gui;
-let scene2, light2;
+let scene2, light2, cubeM = null, finalComposer;
+
+const darkMaterial = new THREE.MeshBasicMaterial( { color: "white" } );
 stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
@@ -73,20 +75,22 @@ function main() {
     {
         const cubeGeo = new THREE.BoxBufferGeometry(1.5, 1.5, 1.5);
         const cubeMat = new THREE.MeshBasicMaterial({
-            color: 0x00ff00,
-            name: "no-bloom"
+            color: 0x00ff00
         });
         const cube = new THREE.Mesh(cubeGeo, cubeMat);
+        cube.layers.enable( OTHER_LAYER );
         cube.position.x = 2;
         cube.position.y = 3;
         scene.add(cube);
     }
 
     {
-        const lampGeo = new THREE.SphereBufferGeometry(.2);
+        const lampGeo = new THREE.IcosahedronGeometry(1, 15);
         const lampMat = new THREE.MeshBasicMaterial({color: 0xaabbff});
         lamp = new THREE.Mesh(lampGeo, lampMat);
-        lamp.position.y = 3;
+        lamp.layers.enable( BLOOM_LAYER );
+        lamp.position.y = 0;
+        lamp.position.x = 0;
         scene.add(lamp);
     }
     {
@@ -98,7 +102,7 @@ function main() {
         });
         const sky = new THREE.Mesh(skyGeo, skyMat);
         sky.rotation.x = 90 * Math.PI / 180;        
-        scene.add(sky);
+        // scene.add(sky);
     }
 
     {
@@ -107,7 +111,7 @@ function main() {
         const ball = new THREE.Mesh(ballGeo, ballMat);
         ball.position.z = -2;
         ball.position.y = 3;
-        scene.add(ball);
+        // scene.add(ball);
     }
 
     {
@@ -127,7 +131,7 @@ function main() {
     bloomComposer = new EffectComposer( renderer );
     // bloomComposer.renderTarget1.stencilBuffer = true;
     // bloomComposer.renderTarget2.stencilBuffer = true;
-    const renderPass = new RenderPass(scene, camera);
+    const renderScene = new RenderPass(scene, camera);
     // renderPass.clear = true;
     // const renderPass2 = new RenderPass(scene2, camera);
     // renderPass2.clear = false;
@@ -141,10 +145,10 @@ function main() {
 
     const bloomPass = new UnrealBloomPass( new THREE.Vector2(w, h), 5.72, 0.29, 0.04 );
     // bloomPass.renderToScreen = false;
-    bloomComposer.addPass( renderPass );
+    bloomComposer.addPass( renderScene );
     bloomComposer.addPass( bloomPass );
     // bloomComposer.addPass(clearMask);
-
+    scene.add( new THREE.AmbientLight( 0xffffff ) );
     // bloomComposer.addPass( renderPass2 );
     // bloomComposer.addPass(mask2);
    
@@ -152,43 +156,47 @@ function main() {
 
     // bloomComposer.addPass(copyShader);
 
-    const finnalShader = new ShaderPass(
+    const finalPass = new ShaderPass(
         new THREE.ShaderMaterial( {
             uniforms: {
                 baseTexture: { value: null },
                 bloomTexture: { value: bloomComposer.renderTarget2.texture }
             },
             vertexShader: `
-                varying vec2 vUv;
+            varying vec2 vUv;
 
-                void main() {
+			void main() {
 
-                    vUv = uv;
+				vUv = uv;
 
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
-                }
+			}
             `,
             fragmentShader: `
-                uniform sampler2D baseTexture;
-                uniform sampler2D bloomTexture;
+            uniform sampler2D baseTexture;
+			uniform sampler2D bloomTexture;
 
-                varying vec2 vUv;
+			varying vec2 vUv;
 
-                void main() {
+			void main() {
 
-                    gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
+				gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
 
-                }
+			}
+            
             `,
             defines: {}
         } ), "baseTexture"
     );
+    finalPass.needsSwap = true;
 
-    const finnalPass = new EffectComposer( renderer );
-    
-    finnalPass.addPass(renderPass);
-    finnalPass.addPass(finnalShader);
+    finalComposer = new EffectComposer( renderer );
+    finalComposer.addPass( renderScene );
+    finalComposer.addPass( finalPass );
+
+
+
     
     
 
@@ -250,13 +258,13 @@ function main() {
     cameraArea.add(cameraPosition, "x", 1.0, 100.0).step( 1 ).onChange(function(value) {
         camera.position.x = Number(value);
         camera.updateProjectionMatrix();
-        bloomComposer.render();
+        window.requestAnimationFrame(tick);
     });
 
     cameraArea.add(cameraPosition, "y", 1.0, 100.0).step( 1 ).onChange(function(value) {
         camera.position.y = Number(value);
         camera.updateProjectionMatrix();
-        bloomComposer.render();
+        window.requestAnimationFrame(tick);
     });
 
     cameraArea.add(cameraPosition, "z", 1.0, 100.0).step( 1 ).onChange(function(value) {
@@ -271,22 +279,44 @@ function main() {
 
 main();
 
+
+function dotNotBloom(e) {
+    if( e.isMesh && layer.test( e.layers ) === true ) {
+        console.log(e.geometry.type);
+       cubeM = e.material;
+       e.material = darkMaterial;
+    }
+}
+
+function reverseBloom(e) {
+    if( e.isMesh && layer.test( e.layers ) === true ) {
+        console.log(e.geometry.type);
+        e.material = cubeM;
+     }
+}
+
 function tick(time) {
    
     stats.update();
     // console.log(camera.position);
     // camera.updateProjectionMatrix();
     // renderer.autoClear = false;
-    lamp.position.x = Math.sin(time * 0.0006) * 5;
-    light2.position.set(lamp.position.x, lamp.position.y, lamp.position.z);
+    // lamp.position.x = Math.sin(time * 0.0006) * 5;
+    // light2.position.set(lamp.position.x, lamp.position.y, lamp.position.z);
+    scene.traverse( dotNotBloom );
     bloomComposer.render();
+    scene.traverse( reverseBloom );
+
+    finalComposer.render();
     // scene.traverse(function(m) {
     //     if( m.isMesh&& m.geometry.type == "SphereGeometry" ){
     //         console.log(m);
     //     }
     // });
+   
 
-    window.requestAnimationFrame(tick);
+
+    // window.requestAnimationFrame(tick);
 }
 
 
