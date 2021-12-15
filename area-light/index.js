@@ -32,14 +32,14 @@ function main() {
     renderer = new THREE.WebGLRenderer({antialias: true});
     canvas = renderer.domElement;
     document.body.appendChild(canvas);
-    renderer.setSize(w, h);
+    renderer.setSize(w, h); 
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.outputEncoding = THREE.sRGBEncoding;
 
     controls = new OrbitControls(camera, canvas);
     
 
-    scene.add(new THREE.AxesHelper(100));
+    // scene.add(new THREE.AxesHelper(100));
 
     RectAreaLightUniformsLib.init();
     
