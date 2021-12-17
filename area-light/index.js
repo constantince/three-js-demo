@@ -1,4 +1,4 @@
-import * as THREE from "../three/build/three.module.js";;
+import * as THREE from "../three/build/three.module.js";
 import { OrbitControls } from "../core/OrbitControls.js";
 import { RectAreaLightUniformsLib } from "../three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { RectAreaLightHelper } from "../three/examples/jsm/helpers/RectAreaLightHelper.js";

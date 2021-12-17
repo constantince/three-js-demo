@@ -1,4 +1,4 @@
-import * as THREE from "../core/three.module.js";
+import * as THREE from "../three/build/three.module.js";
 import { OrbitControls } from "../core/OrbitControls.js";
 import { EffectComposer } from "../three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "../three/examples/jsm/postprocessing/RenderPass.js";
@@ -289,6 +289,9 @@ function dotNotBloom(e) {
 }
 
 function reverseBloom(e) {
+    if(  e.isMesh ) {
+        console.log(e.material);
+    }
     if( e.isMesh && layer.test( e.layers ) === true ) {
         console.log(e.geometry.type);
         e.material = cubeM;
@@ -308,6 +311,8 @@ function tick(time) {
     scene.traverse( reverseBloom );
 
     finalComposer.render();
+
+    scene.traverse( reverseBloom );
     // scene.traverse(function(m) {
     //     if( m.isMesh&& m.geometry.type == "SphereGeometry" ){
     //         console.log(m);
