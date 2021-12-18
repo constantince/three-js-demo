@@ -7,7 +7,7 @@ function main() {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera(45, w/h, 1,  1000);
-    camera.position.set(5, 5, 5);
+    camera.position.set(20, 20, 20);
 
     renderer = new THREE.WebGLRenderer({antialias: true});
     canvas = renderer.domElement;
@@ -23,7 +23,7 @@ function main() {
 
     const Mat = new THREE.PointsMaterial({
         color: 0xffffff,
-        size: .2,
+        size: .1,
         transparent: true,
         opacity: 1.0
     });
@@ -32,7 +32,7 @@ function main() {
     const p = [], col =10, row = 10;
     for( let i=0; i<range; i++) {
         const particle = new THREE.Vector3(
-            i % col,
+            (i % col),
             5,
             Math.floor( i / row )
         );
@@ -55,8 +55,8 @@ function tick(time) {
     // console.log(Particles.geometry.attributes.position );
     for( let i=0; i<position.length; i +=3) {
         const key = Math.floor((i / 3) / 10)
-        if ( time - start > key * 400 ) {
-            position[ i + 1 ]  = Math.sin((time - (key * 400)) * 0.002) * 5;
+        if ( time - start > key * 100 ) {
+            position[ i + 1 ]  = Math.sin((time - (key * 100)) * 0.002);
         }
         
     }
