@@ -1,4 +1,7 @@
 import * as THREE from "../core/three.module.js";
+import { EffectComposer } from "../three/examples/jsm/postprocessing/EffectComposer.js";
+import { ShaderPass } from "../three/examples/jsm/postprocessing/ShaderPass.js";
+import { CopyShader } from "../three/examples/jsm/shaders/CopyShader.js";
 
 let scene, camera, ambient, directionalLight, renderer, cloudGeo, cloudMaterial
 ,cloudParticles = [], flash, rainGeo, rainMaterial, rain, rainCount = 15000, frameCount = 0;
@@ -48,6 +51,11 @@ function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     document.body.appendChild(renderer.domElement);
+
+    const composer = new EffectComposer( renderer, canvas );
+    const effection = new ShaderPass( CopyShader );
+
+    composer.addPass( effection );
 
 
     let loader = new THREE.TextureLoader();
@@ -100,12 +108,13 @@ function animate(time) {
         if(flash.power < 100) 
           flash.position.set(
             Math.random()*400,
-            300 + Math.random() *200,
+            300 + Math.random() * 200,
             100
           );
         flash.power = 50 + Math.random() * 500;
-      }
-    renderer.render(scene, camera);
+    }
+    composer.renderer();
+    // renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
 }
 

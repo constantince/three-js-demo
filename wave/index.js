@@ -18,7 +18,7 @@ function main() {
     new OrbitControls(camera, canvas);
 
     scene.add( new THREE.AxesHelper(100));
-
+ 
     const Geo = new THREE.BufferGeometry();
 
     const Mat = new THREE.PointsMaterial({
@@ -42,6 +42,7 @@ function main() {
     Geo.setFromPoints(p);
     Particles = new THREE.Points(Geo, Mat);
     scene.add( Particles );
+
 
     window.requestAnimationFrame(time => {
         start = time;

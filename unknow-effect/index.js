@@ -72,7 +72,7 @@ function main() {
         const B = new THREE.Mesh(BGeo, BMat);
         B.position.set(Math.random() - 0.5, Math.random() - 0.5,Math.random() - 0.5 ).normalize();
         B.position.multiplyScalar(Math.random() * 500);
-        B.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2)
+        B.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
         B.scale.x = B.scale.y = B.scale.z = Math.random();
 
         obj.add(B);
