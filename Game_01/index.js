@@ -144,11 +144,6 @@ function tick() {
         player.rotateY(turn * dt * 2);
     }
 
-
-
-
-
-
     camera.lookAt(pos);
     pos.y += 2;
     pos.z -= 5;
