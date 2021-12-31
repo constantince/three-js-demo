@@ -20,7 +20,7 @@ function main() {
     canvas = renderer.domElement;
     document.body.appendChild(canvas);
     renderer.setSize(w, h);
-    
+    // create curves
     const curve = new Curves.GrannyKnot();
     const geometry = new THREE.TubeBufferGeometry(curve, 1000, 1, 20, true);
     const material = new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true});
